@@ -12,3 +12,6 @@ for filename in DATASETS:
     y = y.reshape(len(y), 1)
     #X = np.array([[4,3,7],[0,1,-1],[9,14,2]])
     ada.train(X, y)
+    instances = load_data(filename)
+    for instance in instances[0]:
+        ada.predict(instance)

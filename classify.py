@@ -3,6 +3,7 @@ import argparse
 import sys
 import pickle
 from data import load_data
+from cs475_types import Adaboost
 
 from cs475_types import ClassificationLabel, FeatureVector, Instance, Predictor
 
@@ -57,7 +58,8 @@ def get_args():
     parser.add_argument("--algorithm", type=str, help="The name of the algorithm for training.")
 
     # TODO This is where you will add new command line options
-    
+    parser.add_argument("--num-boosting-iterations", type=int, help="The number of boosting iterations to run.",
+                        default=10)
     
     args = parser.parse_args()
     check_args(args)
@@ -76,7 +78,7 @@ def check_args(args):
             raise Exception("model file specified by --model-file does not exist.")
 
 
-def train(X, y, algorithm):
+def train(X, y, algorithm, args):
     """
     Trains the model on the data using the algorithm
     :param X: the data
@@ -86,14 +88,19 @@ def train(X, y, algorithm):
     """
     # TODO Train the model using "algorithm" on "data"
     # TODO This is where you will add new algorithms that will subclass Predictor
-    
-    return None
+    model = None
+    if algorithm.lower() == 'adaboost':
+        X = X.todense()
+        y = y.reshape(len(y), 1)
+        model = Adaboost()
+        model.train(X, y, boost_iter=args.num_boosting_iterations)
+    return model
 
 
 def write_predictions(predictor, instances, predictions_file):
     try:
         with open(predictions_file, 'w') as writer:
-            for instance in instances:
+            for instance in instances[0]:
                 label = predictor.predict(instance)
         
                 writer.write(str(label))
@@ -110,7 +117,7 @@ def main():
         X, y = load_data(args.data)
 
         # Train the model.
-        predictor = train(X, y, args.algorithm)
+        predictor = train(X, y, args.algorithm, args)
         try:
             with open(args.model_file, 'wb') as writer:
                 pickle.dump(predictor, writer)
